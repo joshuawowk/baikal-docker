@@ -22,11 +22,11 @@ services:
       - /docker/baikal/config:/var/www/baikal/config
       - /docker/baikal/Specific:/var/www/baikal/Specific
       # Mount the whitelist-enabled nginx configuration
-      - ./files/nginx-whitelist.conf:/etc/nginx/conf.d/default.conf:ro
+      - /home/jwowk/repos/baikal-docker/files/nginx-whitelist.conf:/etc/nginx/conf.d/default.conf:ro
       # Mount the whitelist injection script
-      - ./files/docker-entrypoint.d/nginx/45-inject-whitelist.sh:/docker-entrypoint.d/45-inject-whitelist.sh:ro
+      - /home/jwowk/repos/baikal-docker/files/docker-entrypoint.d/nginx/45-inject-whitelist.sh:/docker-entrypoint.d/45-inject-whitelist.sh:ro
       # Mount the PHP whitelist plugin
-      - ./files/docker-entrypoint.d/LocalNetworkWhitelistPlugin.php:/docker-entrypoint.d/LocalNetworkWhitelistPlugin.php:ro
+      - /home/jwowk/repos/baikal-docker/files/docker-entrypoint.d/LocalNetworkWhitelistPlugin.php:/docker-entrypoint.d/LocalNetworkWhitelistPlugin.php:ro
     networks:
       - npm_net
 
