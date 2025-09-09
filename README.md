@@ -85,6 +85,7 @@ You can find more installation and configuration guides here:
 
 - [Email Guide](https://github.com/ckulka/baikal-docker/blob/master/docs/email-guide.md)
 - [Home Assistant Fix](https://github.com/ckulka/baikal-docker/blob/master/docs/home-assistant-fix.md)
+- [Local Network Whitelist Guide](https://github.com/ckulka/baikal-docker/blob/master/docs/local-network-whitelist-guide.md)
 - [SSL Certificate Guide](https://github.com/ckulka/baikal-docker/blob/master/docs/ssl-certificates-guide.md)
 - [systemd Guide](https://github.com/ckulka/baikal-docker/blob/master/docs/systemd-guide.md)
 - [Unraid Installation Guide](https://github.com/ckulka/baikal-docker/blob/master/docs/unraid-installation-guide.md)

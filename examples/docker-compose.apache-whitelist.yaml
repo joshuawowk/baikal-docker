@@ -1,0 +1,35 @@
+# Docker Compose file for Baikal server with Apache and local network whitelist
+# This example shows how to configure Baikal to allow local network access without authentication
+
+version: "2"
+services:
+  baikal:
+    image: ckulka/baikal:apache
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Configure local network whitelist - space-separated list of IP ranges
+      # Common private network ranges:
+      # - 192.168.0.0/16 (192.168.x.x networks)
+      # - 10.0.0.0/8 (10.x.x.x networks)
+      # - 172.16.0.0/12 (172.16.x.x to 172.31.x.x networks)
+      # - 127.0.0.0/8 (localhost)
+      BAIKAL_LOCAL_WHITELIST: "192.168.1.0/24 10.0.0.0/8 172.16.0.0/12 127.0.0.1/32"
+
+      # Optional: Set server name for Apache
+      BAIKAL_SERVERNAME: "baikal.local"
+    volumes:
+      - config:/var/www/baikal/config
+      - data:/var/www/baikal/Specific
+      # Mount the whitelist-enabled Apache configuration
+      - ./files/apache-whitelist.conf:/etc/apache2/sites-enabled/000-default.conf:ro
+      # Mount the whitelist injection script
+      - ./files/docker-entrypoint.d/httpd/45-inject-whitelist.sh:/docker-entrypoint.d/45-inject-whitelist.sh:ro
+      # Mount the PHP whitelist plugin
+      - ./files/docker-entrypoint.d/LocalNetworkWhitelistPlugin.php:/docker-entrypoint.d/LocalNetworkWhitelistPlugin.php:ro
+
+volumes:
+  config:
+  data:
