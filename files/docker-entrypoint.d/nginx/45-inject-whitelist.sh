@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Inject local network whitelist into nginx configuration
 

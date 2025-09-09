@@ -9,7 +9,7 @@
  * for whitelisted requests.
  */
 
-namespace Baikal\Core\Frameworks\Flake\Core;
+namespace Baikal\Core;
 
 use Sabre\DAV;
 use Sabre\HTTP;
@@ -35,7 +35,8 @@ class LocalNetworkWhitelistPlugin extends DAV\ServerPlugin
      */
     public function initialize(DAV\Server $server)
     {
-        $server->on('beforeMethod:*', [$this, 'checkWhitelist'], 1); // High priority
+        // Hook into the authentication process very early
+        $server->on('beforeMethod:*', [$this, 'checkWhitelist'], 10); // High priority
     }
 
     /**
@@ -51,27 +52,30 @@ class LocalNetworkWhitelistPlugin extends DAV\ServerPlugin
 
         if ($whitelistHeader === '1') {
             // This request is from a whitelisted IP
-            // We'll set a flag that can be used by other parts of Baikal
-            // to skip authentication
-
-            // Get the current user from HTTP Basic Auth if provided, or use a default
+            // Set the authorization header to a default user if none provided
             $authHeader = $request->getHeader('Authorization');
-            if ($authHeader && stripos($authHeader, 'basic ') === 0) {
-                // Extract username from basic auth
-                $credentials = base64_decode(substr($authHeader, 6));
-                list($username) = explode(':', $credentials, 2);
-            } else {
-                // No auth provided, use a default local user
-                $username = 'local-network-user';
+            
+            if (!$authHeader) {
+                // No auth provided, inject a basic auth header for a default user
+                // This allows the rest of Baikal to work normally
+                $defaultUser = 'local-network-user';
+                $defaultPass = 'bypass'; // This won't be validated due to our backend override
+                $encodedCredentials = base64_encode($defaultUser . ':' . $defaultPass);
+                
+                // Add the authorization header to the request
+                $request = $request->withHeader('Authorization', 'Basic ' . $encodedCredentials);
+                
+                // Store the modified request back in the server
+                // Note: We need to modify the global $_SERVER to affect PHP's input
+                $_SERVER['HTTP_AUTHORIZATION'] = 'Basic ' . $encodedCredentials;
             }
 
-            // Set environment variable to indicate whitelist bypass
+            // Set environment variable to indicate whitelist bypass for our auth backend
             $_SERVER['BAIKAL_WHITELIST_BYPASS'] = '1';
-            $_SERVER['BAIKAL_WHITELIST_USER'] = $username;
 
             // Log the whitelisted access
-            error_log("Baikal: Allowing whitelisted access from IP: " .
-                ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+            $clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+            error_log("Baikal: Allowing whitelisted access from IP: " . $clientIp);
         }
     }
 
@@ -83,15 +87,5 @@ class LocalNetworkWhitelistPlugin extends DAV\ServerPlugin
     public static function shouldBypassAuth()
     {
         return !empty($_SERVER['BAIKAL_WHITELIST_BYPASS']);
-    }
-
-    /**
-     * Get the whitelisted user for this request
-     *
-     * @return string|null
-     */
-    public static function getWhitelistUser()
-    {
-        return $_SERVER['BAIKAL_WHITELIST_USER'] ?? null;
     }
 }
